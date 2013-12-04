@@ -1,0 +1,114 @@
+(use 'visualloy.util)
+(random-float-portions 1 3)
+(map + (random-float-portions 1 3))
+(apply + (random-float-portions 1 3))
+(use 'visualloy.util)
+(apply + (random-float-portions 1 3))
+(use 'visualloy.util)
+(apply + (random-float-portions 1 3))
+(random-float-portions 1 3)
+(require 'seesaw.graphics)
+(seesaw.graphics/buffered-image)
+(seesaw.graphics/buffered-image 3 3)
+(doc seesaw.graphics)
+(doc 'seesaw.graphics)
+seesaw.graphics
+'seesaw.graphics
+seesaw.graphics/->StringShape
+(use 'seesaw.core)
+(native!)
+(def b (buffered-image 10 10))
+(use 'seesaw.graphics)
+(def b (buffered-image 10 10))
+(-> b pack! show!)
+(-> b show!)
+(use 'seesaw.core 'seesaw.graphics 'seesaw.color)
+(defn display 
+  "Display a frame"
+  [frame]
+  (config! frame :on-close :exit)
+  (show! frame))
+(def a (make-alloy 100 250 100 20 3))
+(defn t [m] (temperature->color yellow red (:temp m) 200))
+(source t)
+(source 't)
+(doc t)
+(t {:temp (long 9001) :comp [0.75 1.0 1.25])
+(t {:temp (long 9001) :comp [0.75 1.0 1.25]})
+(/ -448851 40)
+(double (/ -448851 40))
+(temperature->color yellow red 1000 10000)
+(temperature->color yellow red 1000 100000)
+yellow
+red
+(def green [0 255 0])
+(def blue [0 0 255])
+(temperature->color yellow red 1000 100000)
+(temperature->color yellow blue 1000 100000)
+(use 'visualloy.util)
+(interpolate-value 0 100 500 1000)
+(interpolate-value 0 100 700 1000)
+(interpolate-value 0 100 1000 1000)
+(interpolate-value 0 100 1001 1000)
+(temperature->color yellow blue 1000 100000)
+(temperature->color yellow blue 1000 1000000)
+100/1
+100/2
+100/10
+4/3
+(type 4/3)
+(doubl e(/ 5049 20))
+(double (/ 5049 20))
+yellow
+blue
+(interpolate-value 255 0 0.5)
+(interpolate-value 255 0 0.4)
+(interpolate-value 255 0 0.6)
+(interpolate-value 255 0 0.9)
+(partition 2 (interleave yellow red))
+(interpolate-value 255 0 1.1)
+(temperature->color yellow blue 1000 1000000)
+(temperature->color yellow blue 1000 10000000)
+(temperature->color yellow blue 1000 100)
+(temperature->color yellow blue 1000 1000)
+(temperature->color yellow blue 00 1000)
+(temperature->color yellow blue 50 1000)
+(for [c (temperature->color yellow blue 50 1000)] (int c))
+(interleave [1 2] [3 4])
+(concat [1 2] [3 4])
+(concat [1 2] [3 4] [5 6])
+(use 'visualloy.graphics)
+(pixel 3 3)
+ (concat
+             (for [row (range h) col (range w)]
+               [(pixel col row)
+                (style :background (apply color
+                                          (transform (aget arr row col))))]))
+(def transform t)
+ (concat
+             (for [row (range h) col (range w)]
+               [(pixel col row)
+                (style :background (apply color
+                                          (transform (aget arr row col))))]))
+(def arr a)
+ (concat
+             (for [row (range h) col (range w)]
+               [(pixel col row)
+                (style :background (apply color
+                                          (transform (aget arr row col))))]))
+(def w 100) (def h 100)\
+(def w 100) (def h 100)
+ (concat
+             (for [row (range h) col (range w)]
+               [(pixel col row)
+                (style :background (apply color
+                                          (transform (aget arr row col))))]))
+(def out  (concat
+             (for [row (range h) col (range w)]
+               [(pixel col row)
+                (style :background (apply color
+                                          (transform (aget arr row col))))])))
+(first out)
+(second out)
+(concat (for [x (range 5) y (range 5)] [x y]))
+(apply concat (for [x (range 5) y (range 5)] [x y]))

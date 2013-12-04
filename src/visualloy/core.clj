@@ -22,6 +22,7 @@
     (display (canvas->frame canvas "visualloy" height width))
     (loop [input  alloyA
            output alloyB]
+      (println "aaaahhhhh")
       (update-alloy input output thermal-constants)
       (update-array-canvas canvas output transform)
       (Thread/sleep 1000)

@@ -2,10 +2,10 @@
   (:require [seesaw.color :refer [color]]
             [seesaw.core :refer [canvas config! frame pack! show!]]
             [seesaw.graphics :refer [buffered-image draw; line-to move-to
-                                     path style]]
+                                     path rect style]]
             [visualloy.util :refer [dimensions interpolate-value]]))
 
-(defn display 
+(defn display
   "Display a frame"
   [frame]
   (config! frame :on-close :exit)
@@ -33,18 +33,19 @@
   parameters to apply to color for the corresponding rectangle in the
   graphics. width and height are integers which define the dimensions of each
   pixel in the graphics."
-  [graphics arr transform type]
+  [graphics arr transform]
   (let [[h w] (dimensions arr)]
-    (apply #(draw graphics % %2)
-      (for [row (range h) col (range w)]
-        [(if (= type :box)
-           (rect (* col width)  ; x-coordinate
-                 (* row height) ; y-coordinate
-                 width          ; pixel width
-                 height),       ; pixel height
-           (pixel col row)
-         (style :background (apply color (transform (aget arr row col))))])))
-  graphics)
+    (apply draw graphics
+           (apply concat
+             (for [row (range h) col (range w)]
+               [(pixel col row)
+                (style :background (apply color
+                                          (transform (aget arr row col))))]))))
+    ;; (doseq [row (range h) col (range w)]
+    ;;   (draw graphics
+    ;;         (pixel col row)
+    ;;         (style :background (apply color (transform (aget arr row col)))))))
+  graphics) ; either hangs up in this function, or after it
 
 (defn array-canvas
   "Makes a canvas from an alloy array."
@@ -55,7 +56,7 @@
 (defn update-array-canvas
   "Updates an array-canvas with the provided array and transformation."
   [canvas array transform]
-  (config! canvas :paint(fn [c g] (draw-array-to-graphics g array transform))))
+  (config! canvas :paint (fn [c g] (draw-array-to-graphics g array transform))))
 
 (defn temperature->color
   "Given two [R G B] vectors, low-color and high-color, as well as the current
@@ -66,7 +67,7 @@
    T T-max]
   (let [portion (/ T T-max)]
     (for [[low high] (partition 2 (interleave low-color high-color))]
-      (interpolate-value low high portion))))
+      (int (interpolate-value low high portion)))))
 
 (defn pixel
   "Draws a single pixel at the point specified."

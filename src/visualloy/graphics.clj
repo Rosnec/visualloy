@@ -50,7 +50,7 @@
 (defn array-canvas
   "Makes a canvas from an alloy array."
   [array transform]
-  (canvas :id :canvas :background "#000000"
+  (canvas :id :canvas :background "#000FFF"
           :paint (fn [c g] (draw-array-to-graphics g array transform))))
 
 (defn update-array-canvas

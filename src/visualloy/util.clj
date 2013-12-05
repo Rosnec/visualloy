@@ -72,5 +72,5 @@
   [^java.lang.Long l ^java.lang.Double d]
   (cond
     (zero? l) 0
-    (>= (/ Long/MAX_VALUE l) d) (unchecked-mulitply l d)
+    (>= (/ Long/MAX_VALUE l) d) (unchecked-multiply l d)
     :else Long/MAX_VALUE))

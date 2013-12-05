@@ -37,7 +37,7 @@
                  :let [C_m (nth thermal-constants m)]]
              (long
               (safe-multiply C_m
-                             (apply + (for [cell neighbors
+                             (apply safe-add (for [cell neighbors
                                             :let [T (:temp cell)
                                                   p_m (nth (:comp cell) m)]]
                                         (long

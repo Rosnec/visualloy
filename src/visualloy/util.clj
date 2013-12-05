@@ -26,9 +26,12 @@
   "Given a minimum and maximum output, a value and a maximum value, returns
   the output that is portion of the way from min-out to max-out"
   ([min-out max-out portion]
-     (+ min-out
-        (* portion
-           (- max-out min-out))))
+     (let [value (+ min-out
+                    (* portion
+                       (- max-out min-out)))]
+       (cond (< value min-out) min-out
+             (> value max-out) max-out
+             :else value)))
   ([min-out max-out value max-value]
      (interpolate-value min-out max-out (/ value max-value))))
 

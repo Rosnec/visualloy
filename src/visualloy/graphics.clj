@@ -8,17 +8,16 @@
 (defn display
   "Display a frame"
   [frame]
-  (config! frame :on-close :exit)
-  (show! frame))
+  (-> frame
+;      pack!
+      show!))
+
 
 (defn canvas->frame
   "Puts canvas in a frame"
-  ([c]
-     (canvas->frame c "Canvas display"))
-  ([c title]
-     (canvas->frame c title 300 500))
-  ([c name height width]
-     (frame :title name :height height :width width :content c)))
+  [c name height width]
+  (frame :title name :height height :width width :content c
+         :resizable? false :on-close :exit))
 
 (defn pixel
   "Draws a single pixel at the point specified."

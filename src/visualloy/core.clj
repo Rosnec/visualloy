@@ -11,27 +11,27 @@
 (defn run
   ""
   [thermal-constants height width top-left-temp bottom-right-temp]
-  (let [alloyA (make-alloy height width
-                           top-left-temp bottom-right-temp
-                           (count thermal-constants))
-        alloyB (aclone alloyA)
-        T-max (* 4 (max top-left-temp bottom-right-temp)) ; make this better
+  (let [alloy (make-alloy height width
+                          top-left-temp bottom-right-temp
+                          (count thermal-constants))
+        [alloyA alloyB] (repeatedly 2 #(to-array-2d alloy))
+;        alloyA (to-array-2d alloy)
+;        alloyB (to-array-2d alloy)
+        T-max (* 2 (max top-left-temp bottom-right-temp)) ; make this better
         yellow-red-gradient #(temperature->color yellow red % T-max)
         transform #(yellow-red-gradient (:temp %))
         canvas (array-canvas alloyA transform)]
     (display (canvas->frame canvas "visualloy" height width))
     (loop [input  alloyA
            output alloyB]
-      (println "aaaahhhhh")
       (update-alloy input output thermal-constants)
       (update-array-canvas canvas output transform)
-      (Thread/sleep 1000)
       (recur output input))))
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (run [0.75 1.0 1.25] 32 64 100 20))
+  (run [0.75 1.0 1.25] 100 100 10000000 50))
   ;; (let [thermal-constants [0.75 1.0 1.25]
   ;;       alloyA (make-alloy 10 20 (long 100) (long 20) (count thermal-constants))
   ;;       alloyB (aclone alloyA)]

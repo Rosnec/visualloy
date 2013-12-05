@@ -4,34 +4,34 @@
 (declare make-alloy make-cell set-temperature get-neighbors)
 
 (defn make-alloy
-  "Initialize an alloy array with the given parameters.
+  "Create a lazy sequence which represents an alloy with the given parameters.
   All cells start with temperature 0, except for the top-left and bottom-right
   cells, which have a user-defined temperature which remains constant.
 
   Parameters:
-  height            - number of rows of the array
-  width             - number of columns of the array
+  height            - number of rows of the alloy
+  width             - number of columns of the alloy
   top-left-temp     - temperature of top-left cell
   bottom-right-temp - temperature of bottom-right cell
   metal-types       - number of different types of base metals"
   [^java.lang.Integer height        ^java.lang.Integer width
    ^java.lang.Long    top-left-temp ^java.lang.Long    bottom-right-temp
    ^java.lang.Integer metal-types]
-  (let [arr (make-array clojure.lang.PersistentArrayMap height width)]
-    (doseq [row (range height)
-            col (range width)]
-      (aset arr row col (make-cell metal-types)))
-    (set-temperature arr 0      0     top-left-temp)
-    (set-temperature arr
-                     (dec height)
-                     (dec width) bottom-right-temp)
-    arr))
+  (for [row (range height)]
+    (for [col (range width)]
+      (cond (= [row col] [0 0]) (make-cell metal-types top-left-temp)
+            (= [row col] [(dec height) (dec width)])
+            (make-cell metal-types bottom-right-temp)
+            :else (make-cell metal-types)))))
 
 (defn make-cell
-  "Makes a cell with the given number of base metal types"
-  [metal-types]
-  {:temp (long 0)
-   :comp (random-float-portions 1 metal-types)})
+  "Makes a cell with the given number of base metal types and (optional) initial
+  temperature."
+  ([metal-types]
+     (make-cell metal-types 0))
+  ([metal-types temp]
+     {:temp (long temp)
+      :comp (random-float-portions 1 metal-types)}))
 
 (defn set-temperature
   "Sets the temperature at the given index of the array"

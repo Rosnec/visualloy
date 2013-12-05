@@ -39,7 +39,7 @@
            (apply concat
              (for [row (range h) col (range w)]
                [(pixel col row)
-                (style :background (apply color
+                (style :foreground (apply color
                                           (transform (aget arr row col))))]))))
     ;; (doseq [row (range h) col (range w)]
     ;;   (draw graphics

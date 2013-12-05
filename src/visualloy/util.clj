@@ -43,22 +43,34 @@
         cols (count (aget arr 0))]
     [rows cols]))
 
+;; (defn safe-add
+;;   "Adds a sequence of longs. If the sum is ever a negative number, returns
+;;   Long/MAX_VALUE, so it is advised that only positive numbers be used here.
+;;   The purpose is to create a ceiling of Long/MAX_VALUE"
+;;   [num & more]
+;;   (if (empty? more)
+;;     num
+;;     (let [sum (unchecked-add num (first more))]
+;;       (if (neg? sum)
+;;         Long/MAX_VALUE
+;;         (recur sum (rest more))))))
+
 (defn safe-add
-  "Adds a sequence of longs. If the sum is ever a negative number, returns
-  Long/MAX_VALUE, so it is advised that only positive numbers be used here.
-  The purpose is to create a ceiling of Long/MAX_VALUE"
+  ""
   [num & more]
   (if (empty? more)
     num
-    (let [sum (unchecked-add num (first more))]
-      (if (neg? sum)
+    (let [num2 (first more)]
+      (if (if (> num2 0)
+            (> num (- Long/MAX_VALUE num2))
+            (< num (- Long/MIN_VALUE num2)))
         Long/MAX_VALUE
-        (recur sum (rest more))))))
+        (recur (+ num num2) (rest more))))))
 
 (defn safe-multiply
   "Works like long-add, but for multiplication"
   [^java.lang.Long l ^java.lang.Double d]
   (cond
     (zero? l) 0
-    (>= (/ Long/MAX_VALUE l) d) (* l d)
+    (>= (/ Long/MAX_VALUE l) d) (unchecked-mulitply l d)
     :else Long/MAX_VALUE))

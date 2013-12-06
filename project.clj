@@ -1,4 +1,4 @@
-(defproject visualloy "0.1.0-SNAPSHOT"
+(defproject visualloy "0.1.0"
   :description "Computes heat transfer across a metal alloy and displays it
                graphically"
   :url "http://example.com/FIXME"

@@ -33,17 +33,12 @@
                    temp (cond (= index top-corner-index) top-corner-temp
                               (= index bot-corner-index) bot-corner-temp
                               :else (update-cell input output row col
-                                                 top-corner-temp bot-corner-temp
+;                                                 top-corner-temp bot-corner-temp
                                                  thermal-constants))]]
   ;           :when (and (not= [row col] top-corner)
    ;                     (not= [row col] bot-corner))
          ; try improving this by passing in the top-left and bottom-right
          ; temperatures and then use a 3-way cond
-         (let [temp (cond (= index top-corner-index) top-corner-temp
-                          (= index bot-corner-index) bot-corner-temp
-                          :else (update-cell input output row col
-                                   top-corner-temp bot-corner-temp
-                                   thermal-constants))]
          ;; (let [temp (if (and (not= [row col] top-corner-index)
          ;;                     (not= [row col] bot-corner-index))
          ;;              (update-cell input output row col
@@ -53,7 +48,7 @@
 ;           (println "r:" row "c:" col "t:" temp)
 ;           (System/exit 0)
            [(pixel row col)
-            (style :foreground (apply color (transform temp)))]))))
+            (style :foreground (apply color (transform temp)))])))
   ([input output first-row last-row first-col last-col
     top-corner-index top-corner-temp bot-corner-index bot-corner-temp
     thermal-constants transform threshold]

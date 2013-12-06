@@ -63,7 +63,6 @@
   [^clojure.lang.PersistentVector low-color
    ^clojure.lang.PersistentVector high-color
    T T-max]
-;  (println "val" T "max" T-max "p" (/ T T-max))
   (let [portion (/ T T-max)]
     (for [[low high] (partition 2 (interleave low-color high-color))]
       (let [c (int (interpolate-value low high portion))]

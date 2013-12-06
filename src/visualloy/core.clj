@@ -35,9 +35,10 @@
     (invoke-later (display f))
     (loop [input  alloyA
            output alloyB]
-      (config! canvas :paint (update-alloy input output thermal-constants
+      (config! canvas :paint (update-alloy input output
                                            top-corner-temp bot-corner-temp
-                                           transform threshold))
+                                           thermal-constants transform
+                                           threshold))
       (recur output input))))
 
 (defn -main

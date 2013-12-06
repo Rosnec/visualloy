@@ -16,39 +16,20 @@
      (let [[height width] (dimensions input)
            top-corner-index [0 0]
            bot-corner-index [(dec height) (dec width)]]
-       (fn [canvas graphics]
-         (apply draw graphics
-;                (apply concat
-                       (update-alloy input output
-                                     0 height 0 width
-                                     top-corner-index top-corner-temp
-                                     bot-corner-index bot-corner-temp
-                                     thermal-constants transform threshold)))))
+       (update-alloy input output
+                     0 height 0 width
+                     top-corner-index top-corner-temp
+                     bot-corner-index bot-corner-temp
+                     thermal-constants transform threshold)))
   ([input output first-row last-row first-col last-col
     top-corner-index top-corner-temp bot-corner-index bot-corner-temp
     thermal-constants transform]
-     (for [row (range first-row last-row)]
-       (for [col (range first-col last-col)
-             :let [index [row col]
-                   temp (cond (= index top-corner-index) top-corner-temp
-                              (= index bot-corner-index) bot-corner-temp
-                              :else (update-cell input output row col
-;                                                 top-corner-temp bot-corner-temp
-                                                 thermal-constants))]]
-  ;           :when (and (not= [row col] top-corner)
-   ;                     (not= [row col] bot-corner))
-         ; try improving this by passing in the top-left and bottom-right
-         ; temperatures and then use a 3-way cond
-         ;; (let [temp (if (and (not= [row col] top-corner-index)
-         ;;                     (not= [row col] bot-corner-index))
-         ;;              (update-cell input output row col
-         ;;                           top-corner-temp bot-corner-temp
-         ;;                           thermal-constants)
-         ;;              (:temp (aget input row col)))]
-;           (println "r:" row "c:" col "t:" temp)
-;           (System/exit 0)
-           [(pixel row col)
-            (style :foreground (apply color (transform temp)))])))
+     (doseq [row (range first-row last-row)
+             col (range first-col last-col)
+             :let [index [row col]]
+             :when (and (not= index top-corner-index)
+                        (not= index bot-corner-index))]
+       (update-cell input output row col thermal-constants)))
   ([input output first-row last-row first-col last-col
     top-corner-index top-corner-temp bot-corner-index bot-corner-temp
     thermal-constants transform threshold]
@@ -57,8 +38,6 @@
                      top-corner-index top-corner-temp
                      bot-corner-index bot-corner-temp
                      thermal-constants transform)
-       ; here's the problem, you are subdividing into 4 sections, yet you are
-       ; only using 2 of those sections (2nd and 4th quadrants). Fix this!!!
        (let [mid-row (midpoint first-row last-row)
              mid-col (midpoint first-col last-col)
              top-left

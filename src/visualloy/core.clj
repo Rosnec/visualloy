@@ -2,6 +2,7 @@
   (:require [seesaw.core :refer [config! frame invoke-later]]
             [visualloy.alloy :refer [make-alloy print-alloy]]
             [visualloy.graphics :refer [array-canvas display canvas->frame
+                                        draw-daemon
                                         temperature->color update-array-canvas]]
             [visualloy.physics :refer [update-alloy]]
             [visualloy.util :refer [mean]])
@@ -25,23 +26,22 @@
         [alloyA alloyB] (repeatedly 2 #(to-array-2d alloy))
         max-starting-temp (max top-corner-temp bot-corner-temp)
         avg-thermal-constant (mean thermal-constants)
-        T-max (long; (+ (int (/ max-starting-temp 100))
-                       (* max-starting-temp avg-thermal-constant));)
+        T-max (long (* max-starting-temp avg-thermal-constant))
 ;        transform #(temperature->color yellow red % T-max)
-        transform #(temperature->color black white % T-max)
-        canvas (array-canvas alloyA transform)
+        transform #(temperature->color black white (:temp %) T-max)
+        canvas (array-canvas alloyA nil)
         f (canvas->frame canvas "visualloy" (+ height 21) (+ width 1))]
     (invoke-later (display f))
+    (future (draw-daemon canvas alloyA transform))
     (loop [input  alloyA
            output alloyB
 	   iterations 0]
       (if (< iterations max-iterations)
-        (do
-         (config! canvas :paint (update-alloy input output
-                                              top-corner-temp bot-corner-temp
-                                              thermal-constants transform
-                                              threshold))
-         (recur output input (inc iterations)))
+        (do (update-alloy input output
+                          top-corner-temp bot-corner-temp
+                          thermal-constants transform
+                          threshold)
+            (recur output input (inc iterations)))
         (println "Reached max iterations")))))
 
 (defn -main

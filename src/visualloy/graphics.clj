@@ -45,11 +45,33 @@
     ;;         (style :background (apply color (transform (aget arr row col)))))))
   graphics) ; either hangs up in this function, or after it
 
+(defn make-painter
+  "Returns a daemon function to be used as a canvas's :paint function"
+  [array transform]
+  (let [[height width] (dimensions array)]
+    (fn painter [canvas graphics]
+      (apply draw graphics
+        (apply concat
+          (for [row (range height)
+                col (range width)]
+            [(pixel col row)
+             (style :foreground (apply color
+                                  (transform (aget array row col))))]))))))
+
+(defn draw-daemon
+  ""
+  [canvas array transform]
+  (let [painter (make-painter array transform)]
+    (loop []
+      (config! canvas :paint painter)
+      (Thread/sleep 80)
+      (recur))))
+
 (defn array-canvas
   "Makes a canvas from an alloy array."
-  [array transform]
+  [array painter]
   (canvas :id :canvas :background "#000FFF"
-          :paint (fn [c g] (draw-array-to-graphics g array transform))))
+          :paint painter))
 
 (defn update-array-canvas
   "Updates an array-canvas with the provided array and transformation."

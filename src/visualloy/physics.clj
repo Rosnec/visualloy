@@ -67,7 +67,7 @@
                            mid-col last-col
                            top-corner-index top-corner-temp
                            bot-corner-index bot-corner-temp
-                           thermal-constants transform threshold)]
+                           thermal-constants transform threshold)]))))
 ;         (println (str "top:\n" (vec @top) "\nbot:\n" (vec @bot)))
 ;         (let [n (fn [coll typ] (count (filter #(isa? (type %) typ) coll)))
 ;               coll (flatten (concat @top @bot))
@@ -76,7 +76,7 @@
 ;                         "style: " (n coll style))))
 ;         (println (flatten (concat @top @bot)))
 ;         (System/exit 0)))))
-         (flatten (concat @top-left @top-right @bot-left bot-right))))))
+;         (flatten (concat @top-left @top-right @bot-left bot-right))))))
 
 (defn update-cell
   "Updates the temperature of the cell at the given index in the array.

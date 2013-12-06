@@ -17,7 +17,6 @@
 (def blue   [0   0   255])
 
 (defn run
-  ""
   [thermal-constants height width top-corner-temp bot-corner-temp]
   (let [alloy (make-alloy height width
                           top-corner-temp bot-corner-temp
@@ -26,22 +25,27 @@
         max-starting-temp (max top-corner-temp bot-corner-temp)
         avg-thermal-constant (mean thermal-constants)
         T-max (long (Math/pow max-starting-temp avg-thermal-constant))
-;        T-max (* 2 (max top-left-temp bottom-right-temp)) ; make this better
-;        T-max Long/MAX_VALUE
         transform #(temperature->color yellow red % T-max)
         canvas (array-canvas alloyA transform)
         threshold 16
+	max-iterations 1000000
         f (canvas->frame canvas "visualloy" (+ height 21) (+ width 1))]
     (invoke-later (display f))
     (loop [input  alloyA
-           output alloyB]
-      (config! canvas :paint (update-alloy input output
-                                           top-corner-temp bot-corner-temp
-                                           thermal-constants transform
-                                           threshold))
-      (recur output input))))
+           output alloyB
+	   iterations 0]
+      (if (< iterations max-iterations)
+        (do
+         (config! canvas :paint (update-alloy input output
+                                              top-corner-temp bot-corner-temp
+                                              thermal-constants transform
+                                              threshold))
+         (recur output input (inc iterations)))
+        (println "Reached max iterations")))))
 
 (defn -main
   "I don't do a whole lot ... yet."
-  [& args]
-  (run [0.75 1.0 1.25] 16 16 1000 50))
+  [height width T S & coefficients]
+  (run (map #(Double. %) coefficients)
+       (Integer. height) (Integer. width)
+       (Long. T) (Long. S)))

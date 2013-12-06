@@ -24,7 +24,8 @@
         [alloyA alloyB] (repeatedly 2 #(to-array-2d alloy))
         max-starting-temp (max top-corner-temp bot-corner-temp)
         avg-thermal-constant (mean thermal-constants)
-        T-max (long (Math/pow max-starting-temp avg-thermal-constant))
+        T-max (long (+ (int (/ max-starting-temp 100))
+                       (* max-starting-temp avg-thermal-constant)))
         transform #(temperature->color yellow red % T-max)
         canvas (array-canvas alloyA transform)
         threshold 16

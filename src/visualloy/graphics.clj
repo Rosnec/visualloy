@@ -1,22 +1,21 @@
 (ns visualloy.graphics
   (:require [seesaw.color :refer [color]]
             [seesaw.core :refer [canvas config! frame pack! show!]]
-            [seesaw.graphics :refer [buffered-image draw; line-to move-to
-                                     path rect style]]
+            [seesaw.graphics :refer [draw path style]]
             [visualloy.util :refer [dimensions interpolate-value]]))
 
 (defn display
   "Display a frame"
   [frame]
   (-> frame
-;      pack!
+ ;     pack!
       show!))
 
 
 (defn canvas->frame
   "Puts canvas in a frame"
   [c name height width]
-  (frame :title name :height height :width width :content c
+  (frame :title name :size [width :by height] :content c
          :resizable? false :on-close :exit))
 
 (defn pixel
@@ -64,9 +63,12 @@
   [^clojure.lang.PersistentVector low-color
    ^clojure.lang.PersistentVector high-color
    T T-max]
+;  (println "val" T "max" T-max "p" (/ T T-max))
   (let [portion (/ T T-max)]
     (for [[low high] (partition 2 (interleave low-color high-color))]
-      (int (interpolate-value low high portion)))))
+      (let [c (int (interpolate-value low high portion))]
+;        (println "T" T "p" portion "color" c)
+        c))))
 
 (defn pixel
   "Draws a single pixel at the point specified."

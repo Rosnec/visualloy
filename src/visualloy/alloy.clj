@@ -38,8 +38,10 @@
   [arr row col temp]
   (let [prev (aget arr row col)]
     (aset arr row col
-          {:temp temp
-           :comp (:comp prev)})))
+          (assoc prev :temp temp)))
+  temp)
+;          {:temp temp
+;           :comp (:comp prev)})))
 
 (defn get-neighbors
   "Returns a sequence of the cells above, below, and to the left and right of

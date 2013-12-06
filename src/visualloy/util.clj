@@ -22,18 +22,24 @@
           value)
         @remainder))))
 
+(defn mean
+  "Returns the mean of a collection"
+  [coll]
+  (/ (apply + coll)
+     (count coll)))
+
 (defn interpolate-value
   "Given a minimum and maximum output, a value and a maximum value, returns
   the output that is portion of the way from min-out to max-out"
-  ([min-out max-out portion]
-     (let [value (+ min-out
-                    (* portion
-                       (- max-out min-out)))]
-       (cond (< value min-out) min-out
-             (> value max-out) max-out
-             :else value)))
-  ([min-out max-out value max-value]
-     (interpolate-value min-out max-out (/ value max-value))))
+  ([A B portion]
+     (let [min-out (min A B)
+           max-out (max A B)
+           value (+ A (* portion (- B A)))]
+         (cond (< value min-out) min-out
+               (> value max-out) max-out
+               :else value)))
+  ([A B value max-value]
+     (interpolate-value A B (/ value max-value))))
 
 (defn dimensions
   "Returns a vector of the dimensions of a 2D array. Assumes all rows have same
@@ -42,6 +48,17 @@
   (let [rows (count arr)
         cols (count (aget arr 0))]
     [rows cols]))
+
+(defn area
+  "Returns the area of a rectangle with the given corner indices"
+  [top-left bot-left top-right bot-right]
+  (* (- bot-left  top-left)
+     (- bot-right top-right)))
+
+(defn midpoint
+  "Finds the midpoint between two integers"
+  [x y]
+  (bit-shift-right (+ x y) 1))
 
 ;; (defn safe-add
 ;;   "Adds a sequence of longs. If the sum is ever a negative number, returns

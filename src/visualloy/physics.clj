@@ -3,6 +3,7 @@
             [seesaw.graphics :refer [draw style]]
             [visualloy.alloy :refer [get-neighbors set-temperature]]
             [visualloy.graphics :refer [pixel]]
+            [visualloy.pool :as pool]
             [visualloy.util :refer [area dimensions midpoint
                                     safe-add safe-multiply]]))
 

@@ -56,7 +56,7 @@
                            top-corner-temp  bot-corner-temp
                            thermal-constants transform threshold))]
       ; Returns nil for now, but in distributed version will join the tasks
-      nil)))
+      (pmap pool/join-task [top-left top-right bot-left]))))
 
 (defn compute-region
   [input output first-row last-row first-col last-col

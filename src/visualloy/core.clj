@@ -5,6 +5,7 @@
                                         draw-daemon
                                         temperature->color update-array-canvas]]
             [visualloy.physics :refer [update-alloy]]
+            [visualloy.pool :as pool]
             [visualloy.util :refer [mean]])
   (:gen-class))
 
@@ -30,7 +31,8 @@
 ;        transform #(temperature->color yellow red % T-max)
         transform #(temperature->color black white (:temp %) T-max)
         canvas (array-canvas alloyA nil)
-        f (canvas->frame canvas "visualloy" (+ height 21) (+ width 1))]
+        f (canvas->frame canvas "visualloy" (+ height 21) (+ width 1))
+        pool (pool/new-async-pool)]
     (invoke-later (display f))
     (future (draw-daemon canvas alloyA transform))
     (loop [input  alloyA

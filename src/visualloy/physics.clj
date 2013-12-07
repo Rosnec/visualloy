@@ -12,7 +12,7 @@
 (defn update-alloy
   "Updates the entire alloy to its next state, taking initial state from
   input and writing the next state to output"
-  ([input output top-corner-temp bot-corner-temp
+  ([pool input output top-corner-temp bot-corner-temp
     thermal-constants transform threshold]
      (let [[height width] (dimensions input)
            top-corner-index [0 0]

@@ -1,17 +1,18 @@
 (ns visualloy.pool
   "Functional ForkJoinPool interfaces adapted from
   http://tech.puredanger.com/2011/01/04/forkjoin-clojure/"
-  (:import [java.util.concurrent.ForkJoinPool]))
+  (:import [util.java.process IFnTask]
+           [java.util.concurrent.ForkJoinPool]))
 
 (defn new-pool
-  ([]  (ForkJoinPool.))
-  ([p] (ForkJoinPool. p)))
+  ([]  (java.util.concurrent.ForkJoinPool.))
+  ([p] (java.util.concurrent.ForkJoinPool. p)))
 
-(defn new-async-pool
-  ([]  (let [p (new-pool)]
-         (set! (. p asyncMode) true)))
-  ([p] (let [p (new-pool p)]
-         (set! (. p asyncMode) true))))
+;; (defn new-async-pool
+;;   ([]  (let [p (new-pool)]
+;;          (set! (. p asyncMode) true)))
+;;   ([p] (let [p (new-pool p)]
+;;          (set! (. p asyncMode) true))))
 
 (defn shutdown-pool [pool]
   (.shutdown pool))

@@ -28,11 +28,10 @@
         max-starting-temp (max top-corner-temp bot-corner-temp)
         avg-thermal-constant (mean thermal-constants)
         T-max (long (* max-starting-temp avg-thermal-constant))
-;        transform #(temperature->color yellow red % T-max)
         transform #(temperature->color black white (:temp %) T-max)
         canvas (array-canvas alloyA nil)
         f (canvas->frame canvas "visualloy" (+ height 21) (+ width 1))
-        pool (pool/new-async-pool)]
+        pool (pool/new-pool)]
     (invoke-later (display f))
     (future (draw-daemon canvas alloyA transform))
     (loop [input  alloyA
@@ -40,7 +39,8 @@
 	   iterations 0]
       (if (< iterations max-iterations)
         ; need to invoke the pool here somehow
-        (do (update-alloy input output
+        (do (update-alloy pool
+                          input output
                           top-corner-temp bot-corner-temp
                           thermal-constants transform
                           threshold)

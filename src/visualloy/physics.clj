@@ -7,77 +7,148 @@
             [visualloy.util :refer [area dimensions midpoint
                                     safe-add safe-multiply]]))
 
-(declare update-cell temp-from-neighbors)
+(declare alloy-task compute-region update-alloy update-cell temp-from-neighbors)
 
-(defn update-alloy
-  "Updates the entire alloy to its next state, taking initial state from
-  input and writing the next state to output"
-  ([pool input output top-corner-temp bot-corner-temp
-    thermal-constants transform threshold]
-     (let [[height width] (dimensions input)
-           top-corner-index [0 0]
-           bot-corner-index [(dec height) (dec width)]]
-       (update-alloy input output
-                     0 height 0 width
-                     top-corner-index top-corner-temp
-                     bot-corner-index bot-corner-temp
-                     thermal-constants transform threshold)))
-  ([input output first-row last-row first-col last-col
-    top-corner-index top-corner-temp bot-corner-index bot-corner-temp
-    thermal-constants transform]
-     (doseq [row (range first-row last-row)
-             col (range first-col last-col)
-             :let [index [row col]]
-             :when (and (not= index top-corner-index)
-                        (not= index bot-corner-index))]
-       (update-cell input output row col thermal-constants)))
-  ([input output first-row last-row first-col last-col
-    top-corner-index top-corner-temp bot-corner-index bot-corner-temp
-    thermal-constants transform threshold]
-     (if (<= (area first-row last-row first-col last-col) threshold)
-       (update-alloy input output first-row last-row first-col last-col
-                     top-corner-index top-corner-temp
-                     bot-corner-index bot-corner-temp
-                     thermal-constants transform)
-       (let [mid-row (midpoint first-row last-row)
-             mid-col (midpoint first-col last-col)
-             top-left
-             (future (update-alloy input output
-                                   first-row mid-row
-                                   first-col mid-col
-                                   top-corner-index top-corner-temp
-                                   bot-corner-index bot-corner-temp
-                                   thermal-constants transform threshold))
-             top-right
-             (future (update-alloy input output
-                                   first-row mid-row
-                                   mid-col last-col
-                                   top-corner-index top-corner-temp
-                                   bot-corner-index bot-corner-temp
-                                   thermal-constants transform threshold))
-             bot-left
-             (future (update-alloy input output
-                                   mid-row last-row
-                                   first-col mid-col
-                                   top-corner-index top-corner-temp
-                                   bot-corner-index bot-corner-temp
-                                   thermal-constants transform threshold))
-             bot-right
-             (update-alloy input output
+(defn new-alloy-task
+  [& args]
+  (pool/new-task (fn [_] (apply alloy-task args))))
+
+(defn alloy-task
+  [input output first-row last-row first-col last-col
+   top-corner-index bot-corner-index top-corner-temp bot-corner-temp
+   thermal-constants transform threshold]
+  (if (<= (area first-row last-row first-col last-col) threshold)
+    (compute-region input output first-row last-row first-col last-col
+      top-corner-index top-corner-temp  bot-corner-index bot-corner-temp
+      thermal-constants transform)
+    (let [mid-row (midpoint first-row last-row)
+          mid-col (midpoint first-col last-col)
+          top-left
+          (pool/fork-task
+           (new-alloy-task input output
+                           first-row mid-row
+                           first-col mid-col
+                           top-corner-index bot-corner-index
+                           top-corner-temp bot-corner-temp
+                           thermal-constants transform threshold))
+          top-right
+          (pool/fork-task
+           (new-alloy-task input output
+                           first-row mid-row
+                           mid-col last-col
+                           top-corner-index bot-corner-index
+                           top-corner-temp  bot-corner-temp
+                           thermal-constants transform threshold))
+          bot-left
+          (pool/fork-task
+           (new-alloy-task input output
+                           mid-row last-row
+                           first-col mid-col
+                           top-corner-index bot-corner-index
+                           top-corner-temp  bot-corner-temp
+                           thermal-constants transform threshold))
+          bot-right
+          (pool/compute-task
+           (new-alloy-task input output
                            mid-row last-row
                            mid-col last-col
-                           top-corner-index top-corner-temp
-                           bot-corner-index bot-corner-temp
-                           thermal-constants transform threshold)]))))
-;         (println (str "top:\n" (vec @top) "\nbot:\n" (vec @bot)))
-;         (let [n (fn [coll typ] (count (filter #(isa? (type %) typ) coll)))
-;               coll (flatten (concat @top @bot))
-;               [dubs style] (map type (take 2 coll))]
-;           (println (str "dubs: " (n coll dubs)
-;                         "style: " (n coll style))))
-;         (println (flatten (concat @top @bot)))
-;         (System/exit 0)))))
-;         (flatten (concat @top-left @top-right @bot-left bot-right))))))
+                           top-corner-index bot-corner-index
+                           top-corner-temp  bot-corner-temp
+                           thermal-constants transform threshold))]
+      ; Returns nil for now, but in distributed version will join the tasks
+      nil)))
+
+(defn compute-region
+  [input output first-row last-row first-col last-col
+   top-corner-index bot-corner-index top-corner-temp bot-corner-temp
+   thermal-constants transform]
+  (doseq [row (range first-row last-row)
+          col (range first-col last-col)
+          :let [index [row col]]
+          :when (and (not= index top-corner-index)
+                     (not= index bot-corner-index))]
+    (update-cell input output row col thermal-constants)))
+
+(defn update-alloy
+  [fj-pool input output & args]
+  (let [[height width] (dimensions input)
+        top-corner-index [0 0]
+        bot-corner-index [(dec height) (dec width)]]
+    (pool/invoke-task fj-pool
+      (apply new-alloy-task input output
+                            0 height 0 width
+                            top-corner-index bot-corner-index
+                            args))))
+
+;; (defn update-alloy
+;;   "Updates the entire alloy to its next state, taking initial state from
+;;   input and writing the next state to output"
+;;   ([input output top-corner-temp bot-corner-temp
+;;     thermal-constants transform threshold]
+;;      (let [[height width] (dimensions input)
+;;            top-corner-index [0 0]
+;;            bot-corner-index [(dec height) (dec width)]]
+;;        (pool/new-task #(update-alloy input output
+;;                                      0 height 0 width
+;;                                      top-corner-index top-corner-temp
+;;                                      bot-corner-index bot-corner-temp
+;;                                      thermal-constants transform threshold))))
+;;   ([input output first-row last-row first-col last-col
+;;     top-corner-index top-corner-temp bot-corner-index bot-corner-temp
+;;     thermal-constants transform]
+;;      (doseq [row (range first-row last-row)
+;;              col (range first-col last-col)
+;;              :let [index [row col]]
+;;              :when (and (not= index top-corner-index)
+;;                         (not= index bot-corner-index))]
+;;        (update-cell input output row col thermal-constants)))
+;;   ([input output first-row last-row first-col last-col
+;;     top-corner-index top-corner-temp bot-corner-index bot-corner-temp
+;;     thermal-constants transform threshold]
+;;      (if (<= (area first-row last-row first-col last-col) threshold)
+;;        (update-alloy input output first-row last-row first-col last-col
+;;                      top-corner-index top-corner-temp
+;;                      bot-corner-index bot-corner-temp
+;;                      thermal-constants transform)
+;;        (let [mid-row (midpoint first-row last-row)
+;;              mid-col (midpoint first-col last-col)
+;;              top-left
+;;              (future (update-alloy input output
+;;                                    first-row mid-row
+;;                                    first-col mid-col
+;;                                    top-corner-index top-corner-temp
+;;                                    bot-corner-index bot-corner-temp
+;;                                    thermal-constants transform threshold))
+;;              top-right
+;;              (future (update-alloy input output
+;;                                    first-row mid-row
+;;                                    mid-col last-col
+;;                                    top-corner-index top-corner-temp
+;;                                    bot-corner-index bot-corner-temp
+;;                                    thermal-constants transform threshold))
+;;              bot-left
+;;              (future (update-alloy input output
+;;                                    mid-row last-row
+;;                                    first-col mid-col
+;;                                    top-corner-index top-corner-temp
+;;                                    bot-corner-index bot-corner-temp
+;;                                    thermal-constants transform threshold))
+;;              bot-right
+;;              (update-alloy input output
+;;                            mid-row last-row
+;;                            mid-col last-col
+;;                            top-corner-index top-corner-temp
+;;                            bot-corner-index bot-corner-temp
+;;                            thermal-constants transform threshold)]))))
+;; ;         (println (str "top:\n" (vec @top) "\nbot:\n" (vec @bot)))
+;; ;         (let [n (fn [coll typ] (count (filter #(isa? (type %) typ) coll)))
+;; ;               coll (flatten (concat @top @bot))
+;; ;               [dubs style] (map type (take 2 coll))]
+;; ;           (println (str "dubs: " (n coll dubs)
+;; ;                         "style: " (n coll style))))
+;; ;         (println (flatten (concat @top @bot)))
+;; ;         (System/exit 0)))))
+;; ;         (flatten (concat @top-left @top-right @bot-left bot-right))))))
 
 (defn update-cell
   "Updates the temperature of the cell at the given index in the array.

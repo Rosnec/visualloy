@@ -3,7 +3,6 @@
             [seesaw.graphics :refer [draw style]]
             [visualloy.alloy :refer [get-neighbors set-temperature]]
             [visualloy.graphics :refer [pixel]]
-            [visualloy.pool :as pool]
             [visualloy.util :refer [area dimensions midpoint
                                     safe-add safe-multiply]]))
 
@@ -12,7 +11,7 @@
 (defn update-alloy
   "Updates the entire alloy to its next state, taking initial state from
   input and writing the next state to output"
-  ([pool input output top-corner-temp bot-corner-temp
+  ([input output top-corner-temp bot-corner-temp
     thermal-constants transform threshold]
      (let [[height width] (dimensions input)
            top-corner-index [0 0]
@@ -40,35 +39,38 @@
                      bot-corner-index bot-corner-temp
                      thermal-constants transform)
        (let [mid-row (midpoint first-row last-row)
-             mid-col (midpoint first-col last-col)
-             top-left
-             (future (update-alloy input output
-                                   first-row mid-row
-                                   first-col mid-col
-                                   top-corner-index top-corner-temp
-                                   bot-corner-index bot-corner-temp
-                                   thermal-constants transform threshold))
-             top-right
-             (future (update-alloy input output
-                                   first-row mid-row
-                                   mid-col last-col
-                                   top-corner-index top-corner-temp
-                                   bot-corner-index bot-corner-temp
-                                   thermal-constants transform threshold))
-             bot-left
-             (future (update-alloy input output
-                                   mid-row last-row
-                                   first-col mid-col
-                                   top-corner-index top-corner-temp
-                                   bot-corner-index bot-corner-temp
-                                   thermal-constants transform threshold))
-             bot-right
+             mid-col (midpoint first-col last-col)]
+             ;; top-left
+             (future (do (update-alloy input output
+                                       first-row mid-row
+                                       first-col mid-col
+                                       top-corner-index top-corner-temp
+                                       bot-corner-index bot-corner-temp
+                                       thermal-constants transform threshold)
+                         nil))
+             ;; top-right
+             (future (do (update-alloy input output
+                                       first-row mid-row
+                                       mid-col last-col
+                                       top-corner-index top-corner-temp
+                                       bot-corner-index bot-corner-temp
+                                       thermal-constants transform threshold)
+                         nil))
+             ;; bot-left
+             (future (do (update-alloy input output
+                                       mid-row last-row
+                                       first-col mid-col
+                                       top-corner-index top-corner-temp
+                                       bot-corner-index bot-corner-temp
+                                       thermal-constants transform threshold)
+                         nil))
+             ;; bot-right
              (update-alloy input output
                            mid-row last-row
                            mid-col last-col
                            top-corner-index top-corner-temp
                            bot-corner-index bot-corner-temp
-                           thermal-constants transform threshold)]))))
+                           thermal-constants transform threshold)))))
 ;         (println (str "top:\n" (vec @top) "\nbot:\n" (vec @bot)))
 ;         (let [n (fn [coll typ] (count (filter #(isa? (type %) typ) coll)))
 ;               coll (flatten (concat @top @bot))

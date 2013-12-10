@@ -16,7 +16,7 @@
   "Puts canvas in a frame"
   [c name height width]
   (frame :title name :size [width :by height] :content c
-         :resizable? false :on-close :exit))
+         :on-close :exit))
 
 (defn pixel
   "Draws a single pixel at the point specified."

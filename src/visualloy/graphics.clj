@@ -64,7 +64,7 @@
   (let [painter (make-painter array transform)]
     (loop []
       (config! canvas :paint painter)
-      (Thread/sleep 80)
+      (Thread/sleep 1000)
       (recur))))
 
 (defn array-canvas

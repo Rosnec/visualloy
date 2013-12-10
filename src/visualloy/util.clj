@@ -1,5 +1,10 @@
 (ns visualloy.util)
 
+(defn nth-deep
+  "Returns the value in coll at the N-dimensional index given as a collection."
+  [coll index]
+  (reduce nth coll index))
+
 (defn random-int-portions
   "Return a sequence of integers which add to total"
   [total length]

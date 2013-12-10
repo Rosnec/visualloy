@@ -1,7 +1,57 @@
 (ns visualloy.alloy
-  (:require [visualloy.util :refer [dimensions random-float-portions]]))
+  (:require [visualloy.util :refer [dimensions nth-deep
+                                    random-float-portions]]))
 
 (declare make-alloy make-cell set-temperature get-neighbors)
+
+(def neighbor-positions
+       [[-1 0]
+  [0 -1]      [0 1]
+        [ 1 0]])
+
+
+
+(defstruct alloy-cell :temp :comp :neighbors)
+
+(defn make-cell
+  "Makes a cell with the given number of types and given starting temperature"
+  [types T] (alloy-cell :temp T :comp (random-float-portions 1.0 types)))
+
+(defn get-neigbors
+  "Returns the cells which neighbor the cell at index in alloy"
+  [alloy height width index]
+  (for [delta neighbor-deltas
+        :let [index (map + index delta)]
+        :when (and (every? #(not (neg? %)))
+                   (< (first index) height)
+                   (< (second index) width))]
+    (nth-deep alloy index)))
+
+(defn assoc-neighbors
+  "Associates the neighboring cells to each cell in alloy"
+  [alloy height width]
+  (doseq [row (range height) col (range width)
+          :let [index [row col]]]
+    (send (nth-deep alloy index)
+          assoc
+          :neighbors (get-neighbors alloy height width index))))
+
+(defn make-alloy
+  [height width types first-temp last-temp default-temp]
+  (let [first-index [0 0]
+        last-index  [(dec height) (dec width)]
+        alloy
+        (vec (for [row (range height)]
+               (for [col (range width)
+                     :let [index [row col]]]
+                 (agent (cond (= index first-index) (make-cell types first-temp)
+                              (= index last-index)  (make-cell types last-temp)
+                              :else (make-cell types default-temp))))))]
+    (assoc-neighbors alloy height width)))
+
+; stuff below is either redundant or hasn't been updated yet
+; rest of the program hasn't been updated yet either
+
 
 (defn make-alloy
   "Create a lazy sequence which represents an alloy with the given parameters.
@@ -16,13 +66,13 @@
   metal-types       - number of different types of base metals"
   [^java.lang.Integer height        ^java.lang.Integer width
    ^java.lang.Long    top-left-temp ^java.lang.Long    bottom-right-temp
-   ^java.lang.Integer metal-types]
+   ^java.lang.Integer metal-types   ^java.lang.Integer base-temp]
   (for [row (range height)]
     (for [col (range width)]
       (cond (= [row col] [0 0]) (make-cell metal-types top-left-temp)
             (= [row col] [(dec height) (dec width)])
             (make-cell metal-types bottom-right-temp)
-            :else (make-cell metal-types)))))
+            :else (make-cell metal-types base-temp)))))
 
 (defn make-cell
   "Makes a cell with the given number of base metal types and (optional) initial

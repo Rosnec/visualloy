@@ -80,6 +80,9 @@
                             top-corner-index bot-corner-index
                             args))))
 
+(defn alloy-daemon
+  [
+
 ;; (defn update-alloy
 ;;   "Updates the entire alloy to its next state, taking initial state from
 ;;   input and writing the next state to output"

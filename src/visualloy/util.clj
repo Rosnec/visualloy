@@ -47,12 +47,12 @@
      (interpolate-value A B (/ value max-value))))
 
 (defn dimensions
-  "Returns a vector of the dimensions of a 2D array. Assumes all rows have same
-  length"
-  [arr]
-  (let [rows (count arr)
-        cols (count (aget arr 0))]
-    [rows cols]))
+  "Returns a vector of the dimensions of a 2D collection. Assumes all rows have
+  same length"
+  [coll-2d]
+  (let [height (count coll-2d)
+        width  (count (first coll-2d))]
+    [height width]))
 
 (defn area
   "Returns the area of a rectangle with the given corner indices"

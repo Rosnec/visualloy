@@ -1,31 +1,33 @@
 (ns visualloy.alloy
-  (:require [visualloy.util :refer [dimensions nth-deep
-                                    random-float-portions]]))
+  (:require [clojure.core.reducers :as r]
+            [visualloy.util :refer [dimensions nth-deep
+                                    random-float-portions
+                                    safe-add safe-multiply]]))
 
 (declare make-alloy make-cell set-temperature get-neighbors)
 
-(def neighbor-positions
-       [[-1 0]
-  [0 -1]      [0 1]
-        [ 1 0]])
+(def neighbor-deltas
+      [[-1 0]
+  [0 -1]    [0 1]
+       [ 1 0]])
 
-
-
-(defstruct alloy-cell :temp :comp :neighbors)
+(defstruct alloy-cell :temperature :composition :neighbors :mirror-cell)
 
 (defn make-cell
   "Makes a cell with the given number of types and given starting temperature"
-  [types T] (alloy-cell :temp T :comp (random-float-portions 1.0 types)))
+  [T composition]
+  (alloy-cell :temperature T
+              :composition composition))
 
 (defn get-neigbors
   "Returns the cells which neighbor the cell at index in alloy"
   [alloy height width index]
-  (for [delta neighbor-deltas
-        :let [index (map + index delta)]
-        :when (and (every? #(not (neg? %)))
-                   (< (first index) height)
-                   (< (second index) width))]
-    (nth-deep alloy index)))
+  (let [dim [height width]]
+    (for [delta neighbor-deltas
+          :let [index (map + index delta)]
+          :when (and (not-any? neg? index)
+                     (every? true? (map < index dim)))]
+      (nth-deep alloy index))))
 
 (defn assoc-neighbors
   "Associates the neighboring cells to each cell in alloy"
@@ -36,79 +38,68 @@
           assoc
           :neighbors (get-neighbors alloy height width index))))
 
-(defn make-alloy
+(defn mirror-alloys
+  "Links corresponding cells in two alloys of the same size"
+  [alloyA alloyB]
+  (let [[height width] (dimensions alloyA)]
+    (doseq [row (range height)
+            col (range width)
+            :let [index [row col]
+                  cellA (nth-deep alloyA index)
+                  cellB (nth-deep alloyB index)]]
+      (send cellA assoc :mirror-cell cellB)
+      (send cellB assoc :mirror-cell cellA))))
+
+(defn make-mirrored-alloys
   [height width types first-temp last-temp default-temp]
   (let [first-index [0 0]
-        last-index  [(dec height) (dec width)]
-        alloy
-        (vec (for [row (range height)]
-               (for [col (range width)
-                     :let [index [row col]]]
-                 (agent (cond (= index first-index) (make-cell types first-temp)
-                              (= index last-index)  (make-cell types last-temp)
-                              :else (make-cell types default-temp))))))]
-    (assoc-neighbors alloy height width)))
+        last-index [(dec height) (dec width)]
+        compositions (vec (for [row (range height)]
+                            (for [col (range width)]
+                              (random-float-portions 1.0 types))))
+        [alloyA alloyB]
+        (repeatedly 2 #(vec (for [row (range height)]
+                              (for [col (range width)
+                                    :let [index [row col]]]
+                                (agent
+                                 (make-cell
+                                  (cond (= index first-index) first-temp
+                                        (= index last-index)  last-temp
+                                        :else                 default-temp)
+                                  (nth-deep compositions index)))))))]
+    (mirror-alloys alloyA alloyB)
+    (dorun (pmap #(assoc-neighbors % height width) [alloyA alloyB]))
+    [alloyA alloyB]))
 
-; stuff below is either redundant or hasn't been updated yet
-; rest of the program hasn't been updated yet either
+(defn temp-from-neighbors
+  "Returns the temperature of a cell with the given neighbors.
+  Maximum temperature is Long/MAX_VALUE, which is assured by dividing by
+  the number of neighbors as early as possible, "
+  [neighbors thermal-constants]
+  (let [neighbor-divisor (/ (count neighbors))]
+    (apply safe-add
+           (for [m (range (count thermal-constants))
+                 :let [C_m (nth thermal-constants m)]]
+             (long
+              (safe-multiply C_m
+                             (apply safe-add
+                                    (for [cell neighbors
+                                          :let [T (:temp cell)
+                                                p_m (nth (:comp cell) m)]]
+                                      (long (* T p_m neighbor-divisor))))))))))
 
+(defn update-cell
+  "Updates the cell which mirrors the given cell"
+  [cell]
+  (send (:mirror-cell cell)
+        assoc :temperature (temp-from-neighbors (map deref (:neighbors cell)))))
 
-(defn make-alloy
-  "Create a lazy sequence which represents an alloy with the given parameters.
-  All cells start with temperature 0, except for the top-left and bottom-right
-  cells, which have a user-defined temperature which remains constant.
-
-  Parameters:
-  height            - number of rows of the alloy
-  width             - number of columns of the alloy
-  top-left-temp     - temperature of top-left cell
-  bottom-right-temp - temperature of bottom-right cell
-  metal-types       - number of different types of base metals"
-  [^java.lang.Integer height        ^java.lang.Integer width
-   ^java.lang.Long    top-left-temp ^java.lang.Long    bottom-right-temp
-   ^java.lang.Integer metal-types   ^java.lang.Integer base-temp]
-  (for [row (range height)]
-    (for [col (range width)]
-      (cond (= [row col] [0 0]) (make-cell metal-types top-left-temp)
-            (= [row col] [(dec height) (dec width)])
-            (make-cell metal-types bottom-right-temp)
-            :else (make-cell metal-types base-temp)))))
-
-(defn make-cell
-  "Makes a cell with the given number of base metal types and (optional) initial
-  temperature."
-  ([metal-types]
-     (make-cell metal-types 0))
-  ([metal-types temp]
-     {:temp (long temp)
-      :comp (random-float-portions 1 metal-types)}))
-
-(defn set-temperature
-  "Sets the temperature at the given index of the array"
-  [arr row col temp]
-  (let [prev (aget arr row col)]
-    (aset arr row col
-          (assoc prev :temp temp)))
-  temp)
-;          {:temp temp
-;           :comp (:comp prev)})))
-
-(defn get-neighbors
-  "Returns a sequence of the cells above, below, and to the left and right of
-  the cell at the given index in the array. Sequence should have length between
-  2 and 4."
-  [arr row col]
-  (let [[height width] (dimensions arr)
-        indices (for [dh [-1 0 1]
-                      dw [-1 0 1]
-                      :when (not= (Math/abs dh) (Math/abs dw))]
-                  [(+ row dh) (+ col dw)])]
-    (for [[row col] indices
-          :when (and (>= row 0)
-                     (>= col 0)
-                     (< row height)
-                     (< col width))]
-      (aget arr row col))))
+(defn update-alloy
+  "Updates every cell in the alloy mirroring the given alloy"
+  [alloy thermal-constants]
+  (let [update-fn #(update-cell % thermal-constants)]
+    ; probably should use something other than pmap
+    (dorun (pmap update-fn alloy))))
 
 (defn show-alloy
   "Returns a 2D sequence of the temperatures for each cell in the alloy"

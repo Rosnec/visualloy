@@ -2,7 +2,7 @@
   (:require [seesaw.color :refer [color]]
             [seesaw.core :refer [canvas config! frame pack! show!]]
             [seesaw.graphics :refer [draw path style]]
-            [visualloy.util :refer [dimensions interpolate-value]]))
+            [visualloy.util :refer [dimensions interpolate-value nth-deep]]))
 
 (defn display
   "Display a frame"
@@ -53,10 +53,11 @@
       (apply draw graphics
         (apply concat
           (for [row (range height)
-                col (range width)]
+                col (range width)
+                :let [index [row col]]]
             [(pixel col row)
              (style :foreground (apply color
-                                  (transform (aget array row col))))]))))))
+                                  (transform (nth-deep array index))))]))))))
 
 (defn draw-daemon
   ""

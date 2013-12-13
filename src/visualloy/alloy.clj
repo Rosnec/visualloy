@@ -13,7 +13,7 @@
        [ 1 0]])
 
 (defstruct alloy-cell :temperature :mirror-temp :composition :neighbors
-                      :is-source?)
+                      :index :is-source?)
 
 (defn make-temperature-agents
   "Makes a 2D collection of temperature atoms to be placed into the cells"
@@ -49,6 +49,7 @@
       :temperature temperature
       :mirror-temp mirror-temp
       :neighbors   neighbors
+      :index       index
       :is-source?  is-source?)))
 
 (defn get-neighbor-indices
@@ -122,6 +123,7 @@
   [alloy thermal-constants]
   (let [update-fn #(update-cell % thermal-constants)]
     ; probably should use something other than pmap
+;    (println "ey oh")
     (dorun (pmap update-fn (flatten alloy)))))
 
 (defn show-alloy

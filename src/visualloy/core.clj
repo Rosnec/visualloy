@@ -41,12 +41,14 @@
 	start-time (System/nanoTime)]
 ;    (println max-starting-temp avg-thermal-constant T-max)
     (invoke-later (display f))
-    (daemon (draw-daemon panel image alloyA height width transform))
+    (daemon #(draw-daemon panel image alloyA height width transform))
+;    (println "if you're not seeing this, you're fucked")
     (loop [input  alloyA
            output alloyB
 	   iterations 0]
       (if (< iterations max-iterations)
         (do (update-alloy input thermal-constants)
+;	    (println "it should be updating")
             (recur output input (inc iterations)))
         (println "Reached max iterations after"
 	         (int (/ (- (System/nanoTime) start-time)

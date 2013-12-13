@@ -29,9 +29,10 @@
         T-max (long (* max-starting-temp avg-thermal-constant))
         transform #(temperature->color black white (:temperature @%) T-max)
         canvas (array-canvas alloyA nil)
-        f (canvas->frame canvas "visualloy" (+ height 21) (+ width 1))]
-    (invoke-later (display f))
-    (future (draw-daemon canvas alloyA transform))
+        f (canvas->frame canvas "visualloy" (+ height 21) (+ width 1))
+	start-time (System/nanoTime)]
+;    (invoke-later (display f))
+;    (future (draw-daemon canvas alloyA transform))
     (loop [input  alloyA
            output alloyB
 	   iterations 0]
@@ -40,7 +41,10 @@
         (do (update-alloy input thermal-constants)
 ;            (print-alloy input)
             (recur output input (inc iterations)))
-        (println "Reached max iterations")))))
+        (println "Reached max iterations after"
+	         (int (/ (- (System/nanoTime) start-time)
+      		      1000000000))
+		 "seconds.")))))
 
 (defn -main
   "I don't do a whole lot ... yet."

@@ -2,10 +2,10 @@
   (:require [seesaw.core :refer [config! frame invoke-later]]
             [visualloy.alloy :refer [make-mirrored-alloys update-alloy
                                      print-alloy]]
-            [visualloy.graphics :refer [array-canvas display canvas->frame
-                                        draw-daemon
+            [visualloy.graphics :refer [display draw-daemon
                                         temperature->color update-array-canvas]]
             [visualloy.util :refer [mean]])
+  (:import (java.awt.Image BufferedImage))
   (:gen-class))
 
 ; some colors
@@ -18,7 +18,7 @@
 (def blue   [  0   0 255])
 
 (defn run
-  [thermal-constants height width max-iterations
+  [thermal-constants height width px-height px-width max-iterations
    top-corner-temp bot-corner-temp default-temp]
   (let [[alloyA alloyB] (make-mirrored-alloys height width
                                               (count thermal-constants)
@@ -27,9 +27,14 @@
         max-starting-temp (max top-corner-temp bot-corner-temp)
         avg-thermal-constant (mean thermal-constants)
         T-max (long (* max-starting-temp avg-thermal-constant))
-        transform #(temperature->color black white @(:temperature %) T-max)
-        canvas (array-canvas alloyA nil)
-        f (canvas->frame canvas "visualloy" (+ height 21) (+ width 1))
+        transform #(temperature->color Integer/MAX_VALUE 0
+	                               @(:temperature %) T-max)
+        bg-color (color "blue")
+	image (buffered-image (* width px-width) (* height px-height)
+                              BufferedImage/TYPE_BYTE_BINARY)
+	panel (proxy [JPanel] [] (paint [g] (.drawImage g image 0 0
+	                                                bg-color nil)))
+        f (frame :title "visualloy" :content panel)
 	start-time (System/nanoTime)]
     (invoke-later (display f))
     (future (draw-daemon canvas alloyA transform))

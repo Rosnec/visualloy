@@ -59,14 +59,25 @@
              (style :foreground (apply color
                                   (transform (nth-deep array index))))]))))))
 
+
+
+(defn update-image
+  "Updates a buffered image with the given pixel array. Returns nil."
+  [image pixels px-width px-height]
+  (let [raster (.getRaster image)]
+    (.setPixels raster 0 0 px-width px-height pixels)
+    nil))
+
 (defn draw-daemon
   ""
-  [canvas array transform]
-  (let [painter (make-painter array transform)]
+  [panel image input array transform px-width px-height]
+  (let [flat-input (flatten input)]
     (loop []
-      (config! canvas :paint painter)
-      (Thread/sleep 80)
-      (recur))))
+      (doseq [i (count flat-input)]
+        (aset array i (transform (nth input i))))
+      (update-image image array px-width px-height)
+      (.repaint panel)
+      (Thread/sleep 50))))
 
 (defn array-canvas
   "Makes a canvas from an alloy array."

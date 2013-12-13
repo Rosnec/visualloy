@@ -5,7 +5,7 @@
                                     random-float-portions
                                     safe-add safe-multiply subvec-2d]]))
 
-(declare new-alloy-task make-alloy make-cell set-temperature get-neighbors)
+(declare new-alloy-task)
 
 (def neighbor-deltas
       [[-1 0]

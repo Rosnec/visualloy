@@ -78,18 +78,6 @@
   [x y]
   (bit-shift-right (+ x y) 1))
 
-;; (defn safe-add
-;;   "Adds a sequence of longs. If the sum is ever a negative number, returns
-;;   Long/MAX_VALUE, so it is advised that only positive numbers be used here.
-;;   The purpose is to create a ceiling of Long/MAX_VALUE"
-;;   [num & more]
-;;   (if (empty? more)
-;;     num
-;;     (let [sum (unchecked-add num (first more))]
-;;       (if (neg? sum)
-;;         Long/MAX_VALUE
-;;         (recur sum (rest more))))))
-
 (defn safe-add
   ""
   [num & more]

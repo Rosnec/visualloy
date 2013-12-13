@@ -1,15 +1,5 @@
 (ns visualloy.graphics
-  (:require [seesaw.color :refer [color]]
-            [seesaw.core :refer [canvas config! frame pack! show!]]
-            [seesaw.graphics :refer [draw path style]]
-            [visualloy.util :refer [dimensions interpolate-value nth-deep]]))
-
-(defn display
-  "Display a frame"
-  [frame]
-  (-> frame
- ;     pack!
-      show!))
+  (:require [visualloy.util :refer [interpolate-value]]))
 
 (defn update-image
   "Updates a buffered image with the given pixel array. Returns nil."
@@ -27,9 +17,7 @@
                           {:temperature (:temperature cell),
                            :index       (:index       cell)}))]
     (loop []
-;(println "update")
       (update-image image temp-cells transform)
-;(println "repaint")
       (.repaint panel)
       (Thread/sleep 100)
       (recur))))

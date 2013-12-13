@@ -1,4 +1,4 @@
-(defproject visualloy "0.6.0-SNAPSHOT"
+(defproject visualloy "1.0.0"
   :description "Computes heat transfer across a metal alloy and displays it
                graphically"
   :url "https://github.com/Rosnec/visualloy"
@@ -7,4 +7,5 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [seesaw "1.4.4"]]
   :main visualloy.core
+  :aot [visualloy.core]
   :java-source-paths ["src/util/java/process"])

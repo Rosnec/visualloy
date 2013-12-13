@@ -1,10 +1,9 @@
 (ns visualloy.core
-  (:require [seesaw.core :refer [config! frame invoke-later]]
+  (:require [seesaw.core :refer [frame invoke-later show!]]
             [seesaw.color :refer [color]]
 	    [seesaw.graphics :refer [buffered-image]]
-            [visualloy.alloy :refer [make-mirrored-alloys update-alloy
-                                     print-alloy]]
-            [visualloy.graphics :refer [display draw-daemon temperature->color]]
+            [visualloy.alloy :refer [make-mirrored-alloys update-alloy]]
+            [visualloy.graphics :refer [draw-daemon temperature->color]]
             [visualloy.pool :refer [new-pool]]
             [visualloy.util :refer [daemon interpolate-value mean]])
   (:import (java.awt.image BufferedImage)
@@ -20,18 +19,30 @@
 (def green  [  0 255   0])
 (def blue   [  0   0 255])
 
+(def color-map
+  {"black"  black,
+   "white"  white,
+   "red"    red,
+   "yellow" yellow,
+   "green"  green,
+   "blue"   blue})
+
 (defn run
   [thermal-constants height width threshold max-iterations
-   top-corner-temp bot-corner-temp default-temp]
+   top-corner-temp bot-corner-temp default-temp low-color high-color]
   (let [[alloyA alloyB] (make-mirrored-alloys height width
                                               (count thermal-constants)
                                               top-corner-temp bot-corner-temp
                                               default-temp)
         max-starting-temp (max top-corner-temp bot-corner-temp default-temp)
+        ; Sets the temperature corresponding to high-color by multiplying
+        ; the average thermal-constant value by the greatest of the starting
+        ; temperatures
         avg-thermal-constant (mean thermal-constants)
         T-max (long (* max-starting-temp avg-thermal-constant))
         transform #(.getRGB (apply color
-	                           (temperature->color yellow red % T-max)))
+	                           (temperature->color low-color high-color
+                                                       % T-max)))
         bg-color (color "blue")
 	image (buffered-image width height BufferedImage/TYPE_INT_ARGB)
 	panel (proxy [JPanel] [] (paintComponent [g] (.drawImage g image 0 0
@@ -41,7 +52,7 @@
 		 :on-close :exit)
         pool (new-pool)
 	start-time (System/nanoTime)]
-    (invoke-later (display f))
+    (invoke-later (show! f))
     (daemon #(draw-daemon panel image alloyA height width transform))
     (loop [input  alloyA
            output alloyB
@@ -57,11 +68,14 @@
 (defn -main
   ([] (println (str "Arguments: <height> <width> <threshold-area>"
                               " <max-iterations> <T> <S> <default-temp>"
-                              " <coefficients>+")))
-  ([height width threshold max-iterations T S default-temp & coefficients]
+                              " <low-color> <high-color>"
+                              " <heat-transfer-coefficients>+")))
+  ([height width threshold max-iterations T S default-temp
+    low-color high-color & coefficients]
     (if (empty? coefficients)
       (-main)
       (run (map #(Double. %) coefficients)
            (Integer. height) (Integer. width) (Integer. threshold)
            (Long. max-iterations)
-           (Long. T) (Long. S) (Long. default-temp)))))
+           (Long. T) (Long. S) (Long. default-temp)
+           (color-map low-color) (color-map high-color)))))

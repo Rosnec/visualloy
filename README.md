@@ -19,9 +19,13 @@ is Long/MAX_VALUE (i.e. 9223372036854775807).
 
 # Command Line Arguments
 
+```
 <height> <width> <threshold-area> <max-iterations> <T> <S> <default-temp>
 <low-color> <high-color> <heat-transfer-coefficients>+
+```
 
 # Example Usage
 
+```
 java -jar visualloy.jar 128 128 64 1000 3073 373 273 yellow red 0.75 1.0 1.25
+```

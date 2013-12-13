@@ -1,4 +1,4 @@
-(defproject visualloy "0.3.0"
+(defproject visualloy "0.4.0"
   :description "Computes heat transfer across a metal alloy and displays it
                graphically"
   :url "https://github.com/Rosnec/visualloy"

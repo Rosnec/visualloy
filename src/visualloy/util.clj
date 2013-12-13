@@ -12,6 +12,12 @@
   [coll index]
   (reduce nth coll index))
 
+(defn subvec-2d
+  "Returns the 2d subvector with the 4 given start/end points"
+  [v start-row end-row start-col end-col]
+  (map #(subvec % start-col end-col)
+       (subvec v start-row end-row)))
+
 (defn random-int-portions
   "Return a sequence of integers which add to total"
   [total length]

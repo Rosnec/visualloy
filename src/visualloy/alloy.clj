@@ -1,8 +1,8 @@
 (ns visualloy.alloy
-  (:require [clojure.core.reducers :as r]
-            [visualloy.util :refer [dimensions nth-deep
+  (:require [visualloy.pool :as pool]
+            [visualloy.util :refer [area dimensions
+	    		    	    midpoint nth-deep
                                     random-float-portions
-                                    nth-deep
                                     safe-add safe-multiply]]))
 
 (declare make-alloy make-cell set-temperature get-neighbors)
@@ -118,12 +118,48 @@
     (send (:mirror-temp cell)
           (fn [T] (temp-from-neighbors (:neighbors cell) thermal-constants)))))
 
+(defn new-alloy-task
+  [& args]
+  (pool/new-task (fn [_] (apply alloy-task args))))
+
+(defn alloy-task
+  [alloy first-row last-row first-col last-col thermal-constants threshold]
+  (if (<= (area first-row last-row first-col last-col) threshold)
+    (compute-region alloy first-row last-row first-col last-col
+                    thermal-constants)
+    (let [mid-row (midpoint first-row last-row)
+          mid-col (midpoint first-col last-col)
+          top-left
+          (pool/fork-task
+           (new-alloy-task alloy first-row mid-row first-col mid-col
+                           thermal-constants threshold))
+          top-right
+          (pool/fork-task
+           (new-alloy-task alloy first-row mid-row mid-col last-col
+                           thermal-constants threshold))
+          bot-left
+          (pool/fork-task
+           (new-alloy-task alloy mid-row last-row first-col mid-col
+                           thermal-constants threshold))
+          bot-right
+          (pool/compute-task
+           (new-alloy-task alloy mid-row last-row mid-col last-col
+                           thermal-constants threshold))]
+      nil)))
+
+(defn compute-region
+  [alloy first-row last-row first-col last-col thermal-constants]
+  (doseq [row (range first-row last-row)
+          col (range first-col last-col)
+          :let [index [row col]]
+          :when (and (not= index top-corner-index)
+                     (not= index bot-corner-index))]
+    (update-cell input output row col thermal-constants)))
+
 (defn update-alloy
   "Updates every cell in the alloy mirroring the given alloy"
   [alloy thermal-constants]
   (let [update-fn #(update-cell % thermal-constants)]
-    ; probably should use something other than pmap
-;    (println "ey oh")
     (dorun (pmap update-fn (flatten alloy)))))
 
 (defn show-alloy

@@ -1,5 +1,12 @@
 (ns visualloy.util)
 
+(defn daemon
+  [function]
+  (doto 
+    (Thread. function)
+    (.setDaemon true)
+    (.start)))
+
 (defn nth-deep
   "Returns the value in coll at the N-dimensional index given as a collection."
   [coll index]

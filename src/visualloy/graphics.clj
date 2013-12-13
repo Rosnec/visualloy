@@ -63,30 +63,32 @@
 
 (defn update-image
   "Updates a buffered image with the given pixel array. Returns nil."
-  [image pixels px-width px-height]
-  (let [raster (.getRaster image)]
-    (.setPixels raster 0 0 px-width px-height pixels)
-    nil))
+  [image temp-agents height width transform]
+;  (println (transform @(first (first temp-agents))))
+;  (.setRGB image 0 0 (transform @(nth-deep temp-agents [0 0]))))
+  (doseq [row (range height) col (range width)]
+      (.setRGB image col row (transform @(nth (nth temp-agents row) col)))))
+
+;  (dorun (pmap (fn [index-row temp-agent-row]
+;                 (pmap (fn [index temp-agent]
+;		         (do (println index (transform @temp-agent))
+;                         (apply #(.setRGB image %2 % (transform @temp-agent))
+;			        index)
+;                         )
+;                       index-row temp-agent-row))
+;               indices temp-agents))))
 
 (defn draw-daemon
   ""
-  [panel image input array transform px-width px-height]
-  (let [flat-input (flatten input)]
-;    (println "niggaz in the club we gonna loop dat shit"
-;             (count flat-input) (count array))
+  [panel image input height width transform]
+  (let [temp-agents (vec (for [row input] (vec (pmap #(:temperature %) row))))
+        indices (vec (for [row (range height)]
+                  (vec (for [col (range width)] [row col]))))
     (loop []
-      (pmap #(aset % %2 (int (transform (nth flat-input %2))))
-            array (range (count flat-input)))
-;      (dotimes [i (count flat-input)]
-;	(System/exit 0)
-;        (println (nth flat-input i))
-;	 
-;        (aset array i (int (transform (nth flat-input i)))))
-      (println "about to update dat image shit")
-      (update-image image array px-width px-height)
-      (println "now we gon' repaint dat shit")
+(println "update")
+      (update-image image temp-agents height width transform)
+(println "repaint")
       (.repaint panel)
-      (println "I could use a nap")
       (Thread/sleep 50)
       (recur))))
 

@@ -31,7 +31,7 @@
       (update-image image temp-cells transform)
 ;(println "repaint")
       (.repaint panel)
-      (Thread/sleep 50)
+      (Thread/sleep 100)
       (recur))))
 
 (defn temperature->color

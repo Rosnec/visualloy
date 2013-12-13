@@ -3,9 +3,9 @@
             [visualloy.util :refer [area dimensions
 	    		    	    midpoint nth-deep
                                     random-float-portions
-                                    safe-add safe-multiply]]))
+                                    safe-add safe-multiply subvec-2d]]))
 
-(declare make-alloy make-cell set-temperature get-neighbors)
+(declare new-alloy-task make-alloy make-cell set-temperature get-neighbors)
 
 (def neighbor-deltas
       [[-1 0]
@@ -66,15 +66,17 @@
   "Makes an alloy"
   [height width first-index last-index
    temperature-coll mirror-temp-coll composition-coll]
-  (for [row (range height)]
-    (for [col (range width)
+  (vec
+   (for [row (range height)]
+    (vec
+     (for [col (range width)
           :let [index [row col]
                 is-source? (if (or (= index first-index) (= index last-index))
                                true false)
                 neighbor-indices (get-neighbor-indices height width index)]]
-      (make-cell index neighbor-indices
-                 temperature-coll mirror-temp-coll composition-coll
-                 is-source?))))
+       (make-cell index neighbor-indices
+                  temperature-coll mirror-temp-coll composition-coll
+                  is-source?))))))
 
 (defn make-mirrored-alloys
   [height width types top-left-temp bot-right-temp default-temp]
@@ -88,9 +90,9 @@
         composition-coll (make-compositions height width types)
         [alloyA alloyB]
 	(pmap (fn [[temperature-coll mirror-temp-coll]]
-                (make-alloy height width first-index last-index
-                            temperature-coll mirror-temp-coll
-			    composition-coll))
+                (vec (make-alloy height width first-index last-index
+                                 temperature-coll mirror-temp-coll
+			         composition-coll)))
               [[temp-collA temp-collB] [temp-collB temp-collA]])]
     [alloyA alloyB]))
 
@@ -118,15 +120,17 @@
     (send (:mirror-temp cell)
           (fn [T] (temp-from-neighbors (:neighbors cell) thermal-constants)))))
 
-(defn new-alloy-task
-  [& args]
-  (pool/new-task (fn [_] (apply alloy-task args))))
+(defn update-region
+  [alloy thermal-constants]
+  (doseq [cell (flatten alloy)]
+    (when (not (:is-source? cell))
+      (update-cell cell thermal-constants))))
 
 (defn alloy-task
   [alloy first-row last-row first-col last-col thermal-constants threshold]
   (if (<= (area first-row last-row first-col last-col) threshold)
-    (compute-region alloy first-row last-row first-col last-col
-                    thermal-constants)
+    (update-region (subvec-2d alloy first-row last-row first-col last-col)
+                   thermal-constants)
     (let [mid-row (midpoint first-row last-row)
           mid-col (midpoint first-col last-col)
           top-left
@@ -147,20 +151,15 @@
                            thermal-constants threshold))]
       nil)))
 
-(defn compute-region
-  [alloy first-row last-row first-col last-col thermal-constants]
-  (doseq [row (range first-row last-row)
-          col (range first-col last-col)
-          :let [index [row col]]
-          :when (and (not= index top-corner-index)
-                     (not= index bot-corner-index))]
-    (update-cell input output row col thermal-constants)))
+(defn new-alloy-task
+  [& args]
+  (pool/new-task (fn [_] (apply alloy-task args))))
 
 (defn update-alloy
   "Updates every cell in the alloy mirroring the given alloy"
-  [alloy thermal-constants]
-  (let [update-fn #(update-cell % thermal-constants)]
-    (dorun (pmap update-fn (flatten alloy)))))
+  [fj-pool alloy height width thermal-constants threshold]
+  (pool/invoke-task fj-pool
+    (new-alloy-task alloy 0 height 0 width thermal-constants threshold)))
 
 (defn show-alloy
   "Returns a 2D sequence of the temperatures for each cell in the alloy"

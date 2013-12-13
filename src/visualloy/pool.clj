@@ -1,7 +1,7 @@
 (ns visualloy.pool
   "Functional ForkJoinPool interfaces adapted from
   http://tech.puredanger.com/2011/01/04/forkjoin-clojure/"
-  (:import [util.java IFnTask]
+  (:import [util.java.process IFnTask]
            [java.util.concurrent.ForkJoinPool]))
 
 (defn new-pool

@@ -1,11 +1,13 @@
 (ns visualloy.core
   (:require [seesaw.core :refer [config! frame invoke-later]]
+            [seesaw.color :refer [color]]
+	    [seesaw.graphics :refer [buffered-image]]
             [visualloy.alloy :refer [make-mirrored-alloys update-alloy
                                      print-alloy]]
-            [visualloy.graphics :refer [display draw-daemon
-                                        temperature->color update-array-canvas]]
-            [visualloy.util :refer [mean]])
-  (:import (java.awt.Image BufferedImage))
+            [visualloy.graphics :refer [display draw-daemon]]
+            [visualloy.util :refer [interpolate-value mean]])
+  (:import (java.awt.image BufferedImage)
+           (javax.swing JPanel))
   (:gen-class))
 
 ; some colors
@@ -24,25 +26,29 @@
                                               (count thermal-constants)
                                               top-corner-temp bot-corner-temp
                                               default-temp)
-        max-starting-temp (max top-corner-temp bot-corner-temp)
+        frame-width  (* width  px-width)
+ 	frame-height (* height px-height)
+        max-starting-temp (max top-corner-temp bot-corner-temp default-temp)
         avg-thermal-constant (mean thermal-constants)
         T-max (long (* max-starting-temp avg-thermal-constant))
-        transform #(temperature->color Integer/MAX_VALUE 0
-	                               @(:temperature %) T-max)
+        transform #(interpolate-value 0 255
+	                              @(:temperature %) T-max)
         bg-color (color "blue")
 	image (buffered-image (* width px-width) (* height px-height)
-                              BufferedImage/TYPE_BYTE_BINARY)
+                              BufferedImage/TYPE_INT_RGB)
 	panel (proxy [JPanel] [] (paint [g] (.drawImage g image 0 0
 	                                                bg-color nil)))
-        f (frame :title "visualloy" :content panel)
+        f (frame :title "visualloy" :content panel
+	         :size [frame-width :by frame-height]
+		 :on-close :exit)
+        px (int-array (* width height))
 	start-time (System/nanoTime)]
     (invoke-later (display f))
-    (future (draw-daemon canvas alloyA transform))
+    (future (draw-daemon panel image alloyA px transform px-width px-height))
     (loop [input  alloyA
            output alloyB
 	   iterations 0]
       (if (< iterations max-iterations)
-        ; need to invoke the pool here somehow
         (do (update-alloy input thermal-constants)
             (recur output input (inc iterations)))
         (println "Reached max iterations after"
@@ -52,8 +58,10 @@
 
 (defn -main
   "I don't do a whole lot ... yet."
-  [height width max-iterations T S default-temp & coefficients]
+  [height width px-height px-width
+   max-iterations T S default-temp & coefficients]
   (run (map #(Double. %) coefficients)
+       (Integer. height) (Integer. width)
        (Integer. height) (Integer. width)
        (Long. max-iterations)
        (Long. T) (Long. S) (Long. default-temp)))

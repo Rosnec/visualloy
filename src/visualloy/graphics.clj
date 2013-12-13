@@ -72,23 +72,23 @@
   ""
   [panel image input array transform px-width px-height]
   (let [flat-input (flatten input)]
+;    (println "niggaz in the club we gonna loop dat shit"
+;             (count flat-input) (count array))
     (loop []
-      (doseq [i (count flat-input)]
-        (aset array i (transform (nth input i))))
+      (pmap #(aset % %2 (int (transform (nth flat-input %2))))
+            array (range (count flat-input)))
+;      (dotimes [i (count flat-input)]
+;	(System/exit 0)
+;        (println (nth flat-input i))
+;	 
+;        (aset array i (int (transform (nth flat-input i)))))
+      (println "about to update dat image shit")
       (update-image image array px-width px-height)
+      (println "now we gon' repaint dat shit")
       (.repaint panel)
-      (Thread/sleep 50))))
-
-(defn array-canvas
-  "Makes a canvas from an alloy array."
-  [array painter]
-  (canvas :id :canvas :background "#000FFF"
-          :paint painter))
-
-(defn update-array-canvas
-  "Updates an array-canvas with the provided array and transformation."
-  [canvas array transform]
-  (config! canvas :paint (fn [c g] (draw-array-to-graphics g array transform))))
+      (println "I could use a nap")
+      (Thread/sleep 50)
+      (recur))))
 
 (defn temperature->color
   "Given two [R G B] vectors, low-color and high-color, as well as the current
@@ -102,10 +102,3 @@
       (let [c (int (interpolate-value low high portion))]
 ;        (println "T" T "p" portion "color" c)
         c))))
-
-(defn pixel
-  "Draws a single pixel at the point specified."
-  [x y]
-  (path []
-    (move-to x y)
-    (line-to x y)))

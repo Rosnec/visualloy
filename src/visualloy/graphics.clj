@@ -4,11 +4,10 @@
 (defn update-image
   "Updates a buffered image with the given pixel array. Returns nil."
   [image temp-cells transform]
-;  (println (:index (first temp-cells))) (System/exit 0)
   (dorun
-  (pmap (fn [cell] (apply #(.setRGB image %2 % (transform @(:temperature cell)))
-                          (:index cell)))
-        temp-cells)))
+    (pmap (fn [cell] (apply #(.setRGB image %2 % (transform @(:temperature cell)))
+                            (:index cell)))
+          temp-cells)))
 
 (defn draw-daemon
   ""
